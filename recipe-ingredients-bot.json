@@ -1,0 +1,198 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "trigger": [
+          "message"
+        ],
+        "channelId": {
+          "__rl": true,
+          "value": "C0CLBFBNEHH",
+          "mode": "list",
+          "cachedResultName": "recipes"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.slackTrigger",
+      "typeVersion": 1,
+      "position": [
+        -432,
+        -160
+      ],
+      "id": "d488a3c8-1b45-4716-a274-b7ebca953dd8",
+      "name": "Slack Trigger",
+      "webhookId": "a05381de-9f85-499b-b519-343dbf87091c",
+      "credentials": {
+        "slackApi": {
+          "id": "qltO2aejKei4Fj4X",
+          "name": "Slack Recipe Bot"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 4
+          },
+          "conditions": [
+            {
+              "id": "7f42f991-132c-4c9b-b2a7-8a24d7b06239",
+              "leftValue": "={{ $json.bot_id }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.4,
+      "position": [
+        -352,
+        -16
+      ],
+      "id": "c8bc1b39-22c7-4ca1-88a6-46ad29c1eee7",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Recipe name: {{ $('Slack Trigger').item.json.text }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "``` You are a recipe assistant. The user gives you a recipe name. Reply with a shopping list for 4 servings, grouped under: *Main ingredients*, *Spices & seasonings*, *Pantry items*. Give each item with its quantity, one per line starting with \"• \". How to prepare step by step Use Slack formatting (single asterisks for bold). No long intro. If the text is not a recipe name, reply: \"Please type a recipe name.\" ```"
+            }
+          ]
+        },
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        -112,
+        -128
+      ],
+      "id": "900d4d79-2d88-4f6a-bebb-73453088c005",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4o-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4o-mini"
+        },
+        "builtInTools": {},
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        -16,
+        48
+      ],
+      "id": "fb9b8a02-ef43-4e53-ae90-6aea52aff22b",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "Ks65zf5MjJ85WSNr",
+          "name": "OpenAI account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "={{ $('Slack Trigger').item.json.channel }}",
+          "mode": "id"
+        },
+        "text": "={{ $json.text }}",
+        "otherOptions": {
+          "includeLinkToWorkflow": false
+        }
+      },
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.7,
+      "position": [
+        272,
+        -48
+      ],
+      "id": "c064d48a-8104-447c-a1ad-7e0fa82baa8d",
+      "name": "Send a message",
+      "webhookId": "09dc01e5-081a-4137-ad4b-80810f14b108",
+      "credentials": {
+        "slackApi": {
+          "id": "qltO2aejKei4Fj4X",
+          "name": "Slack Recipe Bot"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Slack Trigger": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "3972be36a283597edb13caf92b4e5336e687fb4636f8a49db6efb4ca334c7597"
+  }
+}
